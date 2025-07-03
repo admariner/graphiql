@@ -1,6 +1,6 @@
 /* eslint sort-keys: "error" */
 import type { ComponentPropsWithoutRef, FC, ReactNode, RefObject } from 'react';
-import { createContext, useContext, useRef, useEffect } from 'react';
+import { createContext, useContext, useRef, useEffect, useId } from 'react';
 import { create, useStore, UseBoundStore, StoreApi } from 'zustand';
 import { useShallow } from 'zustand/shallow';
 import {
@@ -27,9 +27,11 @@ import {
 import {
   DEFAULT_PRETTIFY_QUERY,
   DEFAULT_QUERY,
+  JSON_DIAGNOSTIC_OPTIONS,
   STORAGE_KEY,
 } from '../constants';
 import { getDefaultTabState } from '../utility/tabs';
+import { languages } from '../monaco-editor';
 
 interface InnerGraphiQLProviderProps
   extends EditorProps,
@@ -156,7 +158,7 @@ const InnerGraphiQLProvider: FC<InnerGraphiQLProviderProps> = ({
 }) => {
   const storage = useStorage();
   const storeRef = useRef<GraphiQLStore>(null!);
-
+  const uriInstanceId = useId();
   // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- false positive
   if (storeRef.current === null) {
     function getInitialVisiblePlugin() {
@@ -213,6 +215,11 @@ const InnerGraphiQLProvider: FC<InnerGraphiQLProviderProps> = ({
           onTabChange,
           shouldPersistHeaders: $shouldPersistHeaders,
           tabs,
+          /**
+           * Strip colons (React 18) and arrows (React 19) because it breaks monaco-editor
+           * variables autocomplete
+           */
+          uriInstanceId: uriInstanceId.replaceAll(/[:«»]/g, '') + '-',
         })(...args);
         const executionSlice = createExecutionSlice({
           fetcher,
@@ -321,6 +328,16 @@ const InnerGraphiQLProvider: FC<InnerGraphiQLProviderProps> = ({
     return () => {
       window.removeEventListener('keydown', runIntrospection);
     };
+  }, []);
+
+  useEffect(() => {
+    /**
+     * Set diagnostics options for JSON
+     *
+     * Setting it on mount fix Uncaught TypeError: Cannot read properties of undefined (reading 'jsonDefaults')
+     * @see https://github.com/graphql/graphiql/pull/4042#issuecomment-3017167375
+     */
+    languages.json.jsonDefaults.setDiagnosticsOptions(JSON_DIAGNOSTIC_OPTIONS);
   }, []);
 
   return (
