@@ -1,5 +1,15 @@
 # graphql-language-service
 
+## 5.6.1
+
+### Patch Changes
+
+- [#4466](https://github.com/graphql/graphiql/pull/4466) [`d0a34f4`](https://github.com/graphql/graphiql/commit/d0a34f4270883b383367734724db01b4b0426b21) Thanks [@glen-84](https://github.com/glen-84)! - Anchor validation diagnostics at the highlighted node's own position, so the range for an unknown aliased field covers the field name rather than the alias, and the range for an unknown directive covers its name rather than starting at the `@`.
+
+- [#4356](https://github.com/graphql/graphiql/pull/4356) [`296214d`](https://github.com/graphql/graphiql/commit/296214da85f18520772bd45fc2830631e2a2a847) Thanks [@DukeDeSouth](https://github.com/DukeDeSouth)! - Wrap autocompleted list input values in square brackets
+
+  When you complete an enum or boolean value for a list-typed argument or input field (e.g. `[Episode]`), the suggestion now inserts `[JEDI]` instead of a bare `JEDI`, which produced an invalid query. Values completed inside an existing list literal, and non-list values, are left as they were.
+
 ## 5.6.0
 
 ### Minor Changes
